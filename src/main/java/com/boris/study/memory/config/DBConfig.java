@@ -1,0 +1,18 @@
+package com.boris.study.memory.config;
+
+import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+
+import javax.sql.DataSource;
+
+@Component
+public class DBConfig {
+    @Bean
+    @ConfigurationProperties(prefix = "app.datasource")
+    public DataSource dataSource() {
+        return DataSourceBuilder.create().type(HikariDataSource.class).build();
+    }
+}
