@@ -13,8 +13,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Component
 public class MemOryBot extends TelegramLongPollingBot {
-    private static Logger logger = LoggerFactory.getLogger(MemOryBot.class);
-
     @Value("${bot.token}")
     private String token;
     @Value("${bot.username}")
@@ -61,4 +59,5 @@ public class MemOryBot extends TelegramLongPollingBot {
         this.sampleRepository = sampleRepository;
     }
 
+    private static Logger logger = LoggerFactory.getLogger(MemOryBot.class);
 }
