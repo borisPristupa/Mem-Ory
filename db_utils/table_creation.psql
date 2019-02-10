@@ -1,0 +1,35 @@
+CREATE TABLE IF NOT EXISTS client (
+	id int PRIMARY KEY,
+	first_name text NOT NULL,
+	last_name text,
+	username text
+);
+
+CREATE TABLE IF NOT EXISTS scenario_state (
+	name text NOT NULL,
+	client_id int NOT NULL REFERENCES client (id) ON UPDATE CASCADE ON DELETE CASCADE,
+	state text NOT NULL DEFAULT '',
+	PRIMARY KEY(name, client_id)
+);
+
+CREATE TABLE IF NOT EXISTS "data" (
+	url text PRIMARY KEY,
+	magic_id int UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS label (
+	id serial PRIMARY KEY,
+	name text NOT NULL,
+	client_id int NOT NULL REFERENCES client (id) ON UPDATE CASCADE ON DELETE CASCADE,
+	UNIQUE(name, client_id)
+);
+
+CREATE TABLE IF NOT EXISTS label_for_data (
+	label_id int NOT NULL REFERENCES "label" (id) ON UPDATE CASCADE ON DELETE CASCADE,
+	data_url text NOT NULL REFERENCES "data" (url) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS label_hierarchy (
+	parent int NOT NULL REFERENCES "label" (id) ON UPDATE CASCADE ON DELETE CASCADE,
+	son int NOT NULL REFERENCES "label" (id) ON UPDATE CASCADE ON DELETE CASCADE
+);

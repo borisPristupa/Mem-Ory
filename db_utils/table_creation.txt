@@ -1,4 +1,0 @@
-CREATE TABLE sample(
-    id serial PRIMARY KEY,
-    description text
-);
