@@ -1,9 +1,11 @@
 # Mem Ory
 A Telegram bot for storing, structuring and sharing your data. You can find him [here](https://t.me/mem_ory_already_taken_why_bot).
-The main idea is to implement a label-based file system that will take all the advantages of being a Telegram bot: security, uniform GUI on all platforms, caching data for offline usage, data exchange between users...<br /> **"Label-based"** means that you search for your file using labels you assigned to it, just like tags. We all are used to the so-called **hierarchical file system** - that is when you put files into folders, then you put that folders into another folders and so on. Hierarchical file system is somewhat opposite to this one.<br />What is the purpose for this kind of file system? Imagine the following situation: you have found files of four types on the Internet: videos for studying, books for studying, videos for fun and books for fun. Now you want to save them, but you also want to store them in thematical folders. How would you call that folders? There are two obvious options:
+The main idea is to implement a label-based file system that will take all the advantages of being a Telegram bot: security, uniform GUI on all platforms, caching data for offline usage, data exchange between users...<br /> **"Label-based"** means that you search for your file using labels you assigned to it, just like tags. We all are used to the so-called **hierarchical file system** - that is when you put files into folders, then you put that folders into another folders and so on. Hierarchical file system is somewhat opposite to this one.<br />What is the purpose for this kind of file system? Imagine the following situation: you have found files of four types on the Internet: videos for studying, books for studying, videos for fun and books for fun. Now you want to save them, but you also want to store them in thematical folders. How would you call that folders? There are two obvious options:<br/>
+
 | Option 1 | Option 2 |
-| -------- | -------- |
+| ------------- | ------------- |
 | Books<ul><li>Fun</li><li>Study</li></ul>Video<ul><li>Fun</li><li>Study</li></ul>| Fun<ul><li>Books</li><li>Video</li></ul>Study<ul><li>Books</li><li>Video</li></ul>|
+
 The problem here is that these two options are equally good. The ambiguity of choosing one of them leads to difficulties while trying to find that files. It is pretty simple in this example, but it becomes more difficult with more directories.<br />The other possible choice is to have all four directories top-level and store all fun content in Fun directory, all videos in Video, etc. This is more like a **label-based** system, because you are now able to find a fun book in both Books and Fun directories, which are independent. Just like tags.<br /> However, that way leads to storing multiple copies of each file, but there is usually a limit of space that prevents you from doing so. **Usually, but not today.** 
 
 ## Guide for ...
@@ -65,6 +67,4 @@ The problem here is that these two options are equally good. The ambiguity of ch
     Proxies are checked for availability (this means that they are reachable and you access https://api.telegram.org through them in ``connect-timeout`` milliseconds or faster) automatically every ``update-delay`` seconds. 
     
 ## Contact me
-Gmail: boris.pristupa@gmail.com
-Telegram: [@boris_pristupa](telegram.me/boris_pristupa)
-VK:    [Борис Приступа](vk.com/boris_pristupa)
+Gmail: boris.pristupa@gmail.com<br/>Telegram: [@boris_pristupa](http://telegram.me/boris_pristupa)<br/>VK: [Борис Приступа](http://vk.com/boris_pristupa)
