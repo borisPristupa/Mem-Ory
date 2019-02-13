@@ -50,21 +50,7 @@ The problem here is that these two options are equally good. The ambiguity of ch
       proxy:
         needed: false
     ```
-    If you need proxy, make your bot properties look like these:
-    ```
-    bot:
-      token: 123456789:ExampleOfBotToken
-      username: Your bot username
-      proxy:
-        needed: true
-        config:
-          connect-timeout: 5000  #the timeout for proxy to respond in milliseconds, default is 5000
-          update-delay: 60       #in this example, availableness of the proxies will be updated every 60 seconds, default is 600
-        list:
-          - 123.45.678.9:1234
-          - 98.765.4.321:4321
-    ```
-    Proxies are checked for availability (this means that they are reachable and you access https://api.telegram.org through them in ``connect-timeout`` milliseconds or faster) automatically every ``update-delay`` seconds. 
+    Proxies now don't work for an unknown reason. **Use VPN**
     
 ## Contact me
 Gmail: boris.pristupa@gmail.com<br/>Telegram: [@boris_pristupa](http://telegram.me/boris_pristupa)<br/>VK: [Борис Приступа](http://vk.com/boris_pristupa)

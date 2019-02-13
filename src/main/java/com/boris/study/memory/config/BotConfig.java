@@ -20,6 +20,9 @@ public class BotConfig {
     public DefaultBotOptions getDefaultBotOptions(ProxyService proxyService) {
         DefaultBotOptions options = ApiContext.getInstance(DefaultBotOptions.class);
 
+        // FIXME: 12.02.19
+        proxyNeeded = false;
+
         if (proxyNeeded) {
             Optional<String> proxy = proxyService.getFastestProxy(false);
             if (proxy.isPresent()) {
