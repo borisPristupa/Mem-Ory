@@ -2,6 +2,7 @@ package com.boris.study.memory.logic.sructure;
 
 import com.boris.study.memory.data.entity.Client;
 import com.boris.study.memory.data.entity.ScenarioState;
+import com.boris.study.memory.data.repository.ClientRepository;
 import com.boris.study.memory.data.repository.ScenarioStateRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,17 +17,21 @@ import java.util.Optional;
 @Configuration
 public class BotScenarioConfiguration {
     private final ScenarioStateRepository stateRepository;
+    private final ClientRepository clientRepository;
 
     @Bean
     @Scope(value = "prototype")
     public BotScenario getScenario(Class<? extends BotScenario> scenarioClass, Client client) {
+        if (!clientRepository.existsById(client.getId())) {
+            throw new IllegalArgumentException("There is no such client in database: " + client);
+        }
+
         ScenarioState scenarioState;
         Optional<ScenarioState> scenarioStateOptional =
                 stateRepository.findByNameAndClientId(BotScenario.getName(scenarioClass), client.getId());
         scenarioState = scenarioStateOptional.orElseGet(() -> {
 
             ScenarioState newState = new ScenarioState();
-            newState.setState(ScenarioState.EMPTY_STATE);
             newState.setClient_id(client.getId());
             newState.setClient(client);
             newState.setName(BotScenario.getName(scenarioClass));
@@ -49,8 +54,9 @@ public class BotScenarioConfiguration {
     }
 
     @Autowired
-    public BotScenarioConfiguration(ScenarioStateRepository stateRepository) {
+    public BotScenarioConfiguration(ScenarioStateRepository stateRepository, ClientRepository clientRepository) {
         this.stateRepository = stateRepository;
+        this.clientRepository = clientRepository;
     }
 
     private static Logger logger = LoggerFactory.getLogger(BotScenarioConfiguration.class);

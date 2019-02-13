@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS client (
 CREATE TABLE IF NOT EXISTS scenario_state (
 	name text NOT NULL,
 	client_id int NOT NULL REFERENCES client (id) ON UPDATE CASCADE ON DELETE CASCADE,
-	state text NOT NULL DEFAULT '',
+	subscenario text,
+	stage int,
 	PRIMARY KEY(name, client_id)
 );
 

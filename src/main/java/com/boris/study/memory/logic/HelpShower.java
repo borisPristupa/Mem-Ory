@@ -8,31 +8,26 @@ import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-public class Dispatcher extends BotScenario {
+public class HelpShower extends BotScenario {
 
     @Override
     public Boolean process(Update update, boolean forceRestart) {
-
-        if (!continueProcessing(update, forceRestart))
-            return false;
-
-        logger.info("Dispatching - Starting for client " + getClient());
+        logger.info("Showing help - Starting for " + getClient());
         try {
             bot.execute(defaultMessage(
-                    "No logic yet",
+                    uiData.getHelp(),
                     BotUtils.retrieveChat(update).getId()
             ));
         } catch (TelegramApiException e) {
-            logger.trace("Exception occurred while dispatching", e);
+            logger.trace("Failed to show help", e);
         }
-        logger.info("Dispatching - Finished");
+        logger.info("Showing help - Finished for " + getClient());
         return true;
     }
 
-
-    public Dispatcher(ScenarioState scenarioState) {
-        super(scenarioState);
+    public HelpShower(ScenarioState state) {
+        super(state);
     }
 
-    private static Logger logger = LoggerFactory.getLogger(Dispatcher.class);
+    private final Logger logger = LoggerFactory.getLogger(HelpShower.class);
 }

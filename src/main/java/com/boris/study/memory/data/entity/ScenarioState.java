@@ -1,32 +1,25 @@
 package com.boris.study.memory.data.entity;
 
-import com.boris.study.memory.data.converter.StateConverter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.json.JSONObject;
 
 import javax.persistence.*;
-import java.util.HashMap;
 
 /**
  * This entity represents a scenario and its current state for a certain client. Remembering states
  * is needed due to Scenario's concept: it may return a value even if it is not finished - such
- * happens when there a some processes the scenario needs to finish before its parent will decide
+ * happens when there are some processes the scenario needs to finish before its parent decides
  * what to do next. For example, when a scenario has an ongoing dialog with a client, it can only
  * send him messages, but the Bot is the only who can receive messages, so that it should somehow
- * remember whom to send that messages - that is what the state stands for.
+ * remember whom to send that messages, and scenarios should remember the place they have stopped
+ * at - that is what the state stands for.
  */
 @Entity
 @Data
 @IdClass(ScenarioStatePK.class)
 @Table(name = "scenario_state", schema = "public", catalog = "mem_ory")
 public class ScenarioState {
-    public static final JSONObject EMPTY_STATE = new JSONObject(new HashMap<String, String>() {{
-        put("ready", "true");
-        //put("running subscenario", "");
-    }});
-
     @Id
     @Column(name = "client_id")
     private Integer client_id;
@@ -35,9 +28,11 @@ public class ScenarioState {
     @Column(name = "name")
     private String name;
 
-    @Convert(converter = StateConverter.class)
-    @Column(name = "state", nullable = false, length = -1)
-    private JSONObject state;
+    @Column(name = "stage")
+    private Integer stage;
+
+    @Column(name = "subscenario", length = -1)
+    private String subscenario;
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
