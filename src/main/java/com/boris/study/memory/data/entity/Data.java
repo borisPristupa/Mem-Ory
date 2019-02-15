@@ -1,9 +1,10 @@
 package com.boris.study.memory.data.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @lombok.Data
@@ -16,5 +17,12 @@ public class Data {
     @Column(name = "magic_id", unique = true, nullable = false)
     private Integer magicId;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "label_for_data",
+            joinColumns = {@JoinColumn(name = "data_url")},
+            inverseJoinColumns = {@JoinColumn(name = "label_id")})
+    private Set<Label> labels;
 }
 

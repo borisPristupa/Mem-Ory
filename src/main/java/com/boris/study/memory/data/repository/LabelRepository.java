@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface LabelRepository extends JpaRepository<Label, Integer> {
     @Query(value = "SELECT l.* FROM label_hierarchy lh " +
@@ -17,4 +18,6 @@ public interface LabelRepository extends JpaRepository<Label, Integer> {
             "WHERE lfd.data_url = ?1 " +
             "GROUP BY l.id", nativeQuery = true)
     List<Label> findAllByDataUrl(String dataUrl);
+
+    Optional<Label> findByNameAndClientId(String name, Long clientId);
 }
