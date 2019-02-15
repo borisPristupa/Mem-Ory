@@ -1,14 +1,43 @@
-package com.boris.study.memory;
+package com.boris.study.memory.utils;
 
 import com.boris.study.memory.data.entity.Client;
+import com.boris.study.memory.logic.sructure.BotScenario;
+import com.boris.study.memory.logic.sructure.StatelessBotScenario;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
+@Component
 public class BotUtils {
-    static Client retrieveClient(Update update) {
+
+    @Getter
+    @Value("${app.magic-chat}")
+    private Long magicChatId;
+    private BeanFactory beanFactory;
+
+    public SendMessage markdownMessage(String text, long chatId) {
+        return new SendMessage()
+                .setChatId(chatId)
+                .setParseMode(ParseMode.MARKDOWN)
+                .setText(text);
+    }
+
+    public SendMessage plainMessage(String text, long chatId) {
+        return new SendMessage()
+                .setChatId(chatId)
+                .setText(text);
+    }
+
+    public Client retrieveClient(Update update) {
         Client client = new Client();
         User user;
         if (update.hasMessage()) {
@@ -38,18 +67,18 @@ public class BotUtils {
         } else if (update.hasShippingQuery()) {
             user = update.getShippingQuery().getFrom();
         } else {
-            logger.trace("Unknown update type");
+            logger.error("Unknown update type");
             throw new IllegalStateException();
         }
 
-        client.setId(user.getId());
+        client.setId(Long.valueOf(user.getId()));
         client.setFirstName(user.getFirstName());
         client.setLastName(user.getLastName());
         client.setUsername(user.getUserName());
         return client;
     }
 
-    public static Chat retrieveChat(Update update) {
+    public Chat retrieveChat(Update update) {
         Chat chat;
         if (update.hasMessage()) {
             chat = update.getMessage().getChat();
@@ -70,15 +99,29 @@ public class BotUtils {
                 update.hasInlineQuery() ||
                 update.hasPreCheckoutQuery() ||
                 update.hasShippingQuery()) {
-            logger.trace("Wrong update type");
+            logger.error("Wrong update type");
             throw new IllegalStateException();
 
         } else {
-            logger.trace("Unknown update type");
+            logger.error("Unknown update type");
             throw new IllegalStateException();
         }
 
         return chat;
+    }
+
+    public StatelessBotScenario obtainStatelessScenario(Class<? extends StatelessBotScenario> scenarioClass,
+                                                        Client client) {
+        return (StatelessBotScenario) beanFactory.getBean("stateless", scenarioClass, client);
+    }
+
+    public BotScenario obtainScenario(Class<? extends BotScenario> scenarioClass, Client client) {
+        return (BotScenario) beanFactory.getBean("stateful", scenarioClass, client);
+    }
+
+    @Autowired
+    public void setBeanFactory(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
     }
 
     private static Logger logger = LoggerFactory.getLogger(BotUtils.class);

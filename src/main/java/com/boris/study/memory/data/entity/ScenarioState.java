@@ -22,7 +22,7 @@ import javax.persistence.*;
 public class ScenarioState {
     @Id
     @Column(name = "client_id")
-    private Integer client_id;
+    private Long client_id;
 
     @Id
     @Column(name = "name")

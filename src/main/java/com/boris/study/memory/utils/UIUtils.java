@@ -1,4 +1,4 @@
-package com.boris.study.memory.ui;
+package com.boris.study.memory.utils;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,8 +12,9 @@ import org.springframework.stereotype.Component;
 @Getter
 @PropertySource(value = "messages_ru.properties", encoding = "UTF-8")
 @ConfigurationProperties(prefix = "messages", ignoreUnknownFields = false)
-public class UIData {
+public class UIUtils {
     private String help;
+    private String commands;
     private Errors errors;
     private String greeting;
 
@@ -26,5 +27,9 @@ public class UIData {
     @ToString
     public static class Errors {
         private String wrongChatType;
+        private String tooManyCommands;
+        private String unknownCommand;
+        private String needlessStart;
+        private String noDataByUrl;
     }
 }

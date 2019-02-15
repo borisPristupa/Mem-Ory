@@ -12,7 +12,7 @@ import java.util.Set;
 public class Client {
     @Id
     @Column(name = "id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "first_name", nullable = false, length = -1)
     private String firstName;

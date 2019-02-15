@@ -15,5 +15,6 @@ public class Data {
 
     @Column(name = "magic_id", unique = true, nullable = false)
     private Integer magicId;
+
 }
 

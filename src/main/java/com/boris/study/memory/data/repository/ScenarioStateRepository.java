@@ -11,5 +11,5 @@ import java.util.Optional;
 public interface ScenarioStateRepository extends JpaRepository<ScenarioState, ScenarioStatePK> {
     List<ScenarioState> findAllByClient(Client client);
     List<ScenarioState> findAllByName(String name);
-    Optional<ScenarioState> findByNameAndClientId(String name, Integer clientId);
+    Optional<ScenarioState> findByNameAndClientId(String name, Long clientId);
 }

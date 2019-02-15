@@ -19,7 +19,14 @@ public class BotScenarioConfiguration {
     private final ScenarioStateRepository stateRepository;
     private final ClientRepository clientRepository;
 
-    @Bean
+    @Bean("stateless")
+    @Scope(value = "prototype")
+    public StatelessBotScenario getStatelessScenario(Class<? extends StatelessBotScenario> scenarioClass,
+                                                     Client client) {
+        return (StatelessBotScenario) getScenario(scenarioClass, client);
+    }
+
+    @Bean("stateful")
     @Scope(value = "prototype")
     public BotScenario getScenario(Class<? extends BotScenario> scenarioClass, Client client) {
         if (!clientRepository.existsById(client.getId())) {
@@ -42,7 +49,7 @@ public class BotScenarioConfiguration {
         try {
             return scenarioClass.getConstructor(ScenarioState.class).newInstance(scenarioState);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            logger.trace(
+            logger.error(
                     String.format(
                             "Failed instantiate %s. " +
                                     "Maybe there is no constructor %s(ScenarioState) ?",

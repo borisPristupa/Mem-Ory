@@ -4,47 +4,55 @@ import com.boris.study.memory.MemOryBot;
 import com.boris.study.memory.data.entity.Client;
 import com.boris.study.memory.data.entity.ScenarioState;
 import com.boris.study.memory.data.repository.ScenarioStateRepository;
-import com.boris.study.memory.ui.UIData;
-import org.springframework.beans.factory.BeanFactory;
+import com.boris.study.memory.utils.BotUtils;
+import com.boris.study.memory.utils.DataUtils;
+import com.boris.study.memory.utils.UIUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.telegram.telegrambots.meta.api.methods.ParseMode;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Update;
 
-public abstract class BotScenario implements Scenario<Update, Boolean> {
+public abstract class BotScenario implements Scenario<Request, Boolean> {
     @Autowired
     protected MemOryBot bot;
     @Autowired
-    protected BeanFactory beanFactory;
+    protected BotUtils botUtils;
     @Autowired
-    protected UIData uiData;
+    protected DataUtils dataUtils;
+    @Autowired
+    protected UIUtils uiUtils;
     @Autowired
     private ScenarioStateRepository stateRepository;
 
     private final ScenarioState state;
 
     /**
-     * @param update The update MemOryBot gets from user
+     * @param request The update MemOryBot gets from user + metadata
      * @return Has the scenario finished yet?
      */
     @Override
-    public abstract Boolean process(Update update, boolean forceRestart);
+    public abstract Boolean process(Request request, boolean forceRestart);
 
     /**
-     * Process the update <b>with</b> forcing restart.
+     * Process the request <b>with</b> forcing restart.
      *
-     * @param update The update MemOryBot gets from user
+     * @param request The update MemOryBot gets from user + metadata
      * @return Has the scenario finished yet?
      */
-    public Boolean process(Update update) {
-        return process(update, true);
+    public Boolean process(Request request) {
+        return process(request, true);
     }
 
-    public Boolean processOther(Class<? extends BotScenario> scenarioClass, Update update) {
-        return beanFactory.getBean(BotScenario.class, scenarioClass, state.getClient()).process(update);
+    public Boolean processOther(Class<? extends BotScenario> scenarioClass, Request request) {
+        if (botUtils.obtainScenario(scenarioClass, getClient()).process(request))
+            return true;
+        setSubscenario(getName(scenarioClass));
+        return false;
     }
 
-    protected Boolean continueProcessing(Update update, boolean forceRestart) {
+    // FIXME: 13.02.19 I don't like that a superclass is dependent on its subclass
+    public void processStateless(Class<? extends StatelessBotScenario> scenarioClass, Request request) {
+        botUtils.obtainStatelessScenario(scenarioClass, getClient()).processStateless(request);
+    }
+
+    protected Boolean continueProcessing(Request request, boolean forceRestart) {
 
         if (forceRestart) {
             state.setSubscenario(null);
@@ -56,8 +64,8 @@ public abstract class BotScenario implements Scenario<Update, Boolean> {
 
             Class<? extends BotScenario> subscenarioClass =
                     BotScenario.getScenarioClass(state.getSubscenario());
-            if (!beanFactory.getBean(BotScenario.class, subscenarioClass, state.getClient())
-                    .process(update, false))
+            if (!botUtils.obtainScenario(subscenarioClass, state.getClient())
+                    .process(request, false))
                 return false;
             state.setSubscenario(null);
         }
@@ -88,13 +96,6 @@ public abstract class BotScenario implements Scenario<Update, Boolean> {
 
     public boolean hasFinished() {
         return null == getStage();
-    }
-
-    protected SendMessage defaultMessage(String text, long chatId) {
-        return new SendMessage()
-                .setChatId(chatId)
-                .setParseMode(ParseMode.MARKDOWN)
-                .setText(text);
     }
 
     /**

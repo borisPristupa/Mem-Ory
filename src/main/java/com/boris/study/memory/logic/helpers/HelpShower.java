@@ -1,28 +1,28 @@
-package com.boris.study.memory.logic;
+package com.boris.study.memory.logic.helpers;
 
-import com.boris.study.memory.BotUtils;
 import com.boris.study.memory.data.entity.ScenarioState;
-import com.boris.study.memory.logic.sructure.BotScenario;
+import com.boris.study.memory.logic.sructure.Request;
+import com.boris.study.memory.logic.sructure.StatelessBotScenario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-public class HelpShower extends BotScenario {
+public class HelpShower extends StatelessBotScenario {
 
     @Override
-    public Boolean process(Update update, boolean forceRestart) {
+    public void processStateless(Request request) {
         logger.info("Showing help - Starting for " + getClient());
         try {
-            bot.execute(defaultMessage(
-                    uiData.getHelp(),
-                    BotUtils.retrieveChat(update).getId()
+            bot.execute(botUtils.markdownMessage(
+                    uiUtils.getHelp(),
+                    botUtils.retrieveChat(request.update).getId()
             ));
+
+            processStateless(CommandsShower.class, request);
         } catch (TelegramApiException e) {
-            logger.trace("Failed to show help", e);
+            logger.error("Failed to show help in request " + request, e);
         }
         logger.info("Showing help - Finished for " + getClient());
-        return true;
     }
 
     public HelpShower(ScenarioState state) {

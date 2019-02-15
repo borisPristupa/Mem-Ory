@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface DataRepository extends JpaRepository<Data, String> {
@@ -22,4 +23,6 @@ public interface DataRepository extends JpaRepository<Data, String> {
             "WHERE client_id = ?1 " +
             "GROUP BY d.url", nativeQuery = true)
     List<Data> findAllByClientId(Integer clientId);
+
+    Optional<Data> findByUrl(String url);
 }

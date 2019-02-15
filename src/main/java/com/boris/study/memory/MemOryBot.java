@@ -3,12 +3,12 @@ package com.boris.study.memory;
 import com.boris.study.memory.data.entity.Client;
 import com.boris.study.memory.data.repository.ClientRepository;
 import com.boris.study.memory.logic.Dispatcher;
-import com.boris.study.memory.logic.Greeter;
-import com.boris.study.memory.logic.sructure.BotScenario;
-import com.boris.study.memory.ui.UIData;
+import com.boris.study.memory.logic.helpers.Greeter;
+import com.boris.study.memory.logic.sructure.Request;
+import com.boris.study.memory.utils.BotUtils;
+import com.boris.study.memory.utils.UIUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -24,43 +24,34 @@ public class MemOryBot extends TelegramLongPollingBot {
     @Value("${bot.username}")
     private String username;
 
-    private UIData uiData;
-    private BeanFactory beanFactory;
+    private UIUtils uiUtils;
+    private BotUtils botUtils;
 
     private ClientRepository clientRepository;
 
     @Override
     public void onUpdateReceived(Update update) {
-        Client client = BotUtils.retrieveClient(update);
+        Client client = botUtils.retrieveClient(update);
 
-        if (!BotUtils.retrieveChat(update).isUserChat()) {
+        if (!botUtils.retrieveChat(update).isUserChat()) {
             SendMessage errorMessage = new SendMessage()
-                    .setChatId(BotUtils.retrieveChat(update).getId())
-                    .setText(uiData.getErrors().getWrongChatType());
+                    .setChatId(botUtils.retrieveChat(update).getId())
+                    .setText(uiUtils.getErrors().getWrongChatType());
             try {
                 execute(errorMessage);
             } catch (TelegramApiException e) {
-                logger.trace("Exception while informing about wrong type of chat, " + client, e);
+                logger.error("Exception while informing about wrong type of chat, " + client, e);
             }
             return;
         }
 
-        BotScenario greeter;
         logger.info("Received update! From " + client);
         if (!clientRepository.existsById(client.getId())) {
             clientRepository.save(client);
-            greeter = beanFactory.getBean(BotScenario.class, Greeter.class, client);
-            if (!greeter.process(update, false)) {
-                return;
-            }
+            botUtils.obtainStatelessScenario(Greeter.class, client).processStateless(new Request(update));
         } else
-            greeter = beanFactory.getBean(BotScenario.class, Greeter.class, client);
+            botUtils.obtainScenario(Dispatcher.class, client).process(new Request(update));
 
-        if (!greeter.hasFinished())
-            if (!greeter.process(update, false))
-                return;
-
-        beanFactory.getBean(BotScenario.class, Dispatcher.class, client).process(update);
     }
 
     @Override
@@ -74,8 +65,8 @@ public class MemOryBot extends TelegramLongPollingBot {
     }
 
     @Autowired
-    public void setBeanFactory(BeanFactory beanFactory) {
-        this.beanFactory = beanFactory;
+    public void setBeanFactory(BotUtils botUtils) {
+        this.botUtils = botUtils;
     }
 
     @Autowired
@@ -84,8 +75,8 @@ public class MemOryBot extends TelegramLongPollingBot {
     }
 
     @Autowired
-    public void setUiData(UIData uiData) {
-        this.uiData = uiData;
+    public void setUiUtils(UIUtils uiUtils) {
+        this.uiUtils = uiUtils;
     }
 
     private static Logger logger = LoggerFactory.getLogger(MemOryBot.class);

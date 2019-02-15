@@ -6,6 +6,6 @@ import java.io.Serializable;
 
 @Data
 public class ScenarioStatePK implements Serializable {
-    private Integer client_id;
+    private Long client_id;
     private String name;
 }
