@@ -11,6 +11,7 @@ import java.util.Set;
 @Table(name = "label", schema = "public", catalog = "mem_ory")
 public class Label {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
 
@@ -20,6 +21,15 @@ public class Label {
     @Column(name = "client_id", nullable = false)
     private Long clientId;
 
+    public Label() {
+    }
+
+    public Label(String name, Client client) {
+        this.name = name;
+        this.client = client;
+        this.clientId = client.getId();
+    }
+
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.EAGER)
@@ -28,9 +38,9 @@ public class Label {
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "label_for_data",
-            joinColumns = {@JoinColumn(name = "label_id")},
-            inverseJoinColumns = {@JoinColumn(name = "data_url")})
-    private Set<Data> data;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "label_hierarchy",
+            joinColumns = {@JoinColumn(name = "parent")},
+            inverseJoinColumns = {@JoinColumn(name = "son")})
+    private Set<Label> sons;
 }
