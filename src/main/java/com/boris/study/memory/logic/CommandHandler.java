@@ -2,6 +2,7 @@ package com.boris.study.memory.logic;
 
 import com.boris.study.memory.data.entity.Client;
 import com.boris.study.memory.data.entity.ScenarioState;
+import com.boris.study.memory.logic.data.DataSaver;
 import com.boris.study.memory.logic.data.DataShower;
 import com.boris.study.memory.logic.helpers.HelpShower;
 import com.boris.study.memory.logic.sructure.BotScenario;
@@ -16,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CommandHandler extends BotScenario {
-    private static final String SEARCH_COMMAND = "/search", HELP_COMMAND = "/help";
+    private static final String SEARCH_COMMAND = "/search", LABELS_COMMAND = "/label", HELP_COMMAND = "/help";
 
     @Override
     public Boolean process(Request request, boolean forceRestart) {
@@ -28,16 +29,12 @@ public class CommandHandler extends BotScenario {
             if (commands.size() == 0) {
                 throw new IllegalArgumentException("An update without commands passed to CommandHandler");
             } else if (commands.size() > 1) {
-                bot.execute(botUtils.markdownMessage(
-                        uiUtils.getErrors().getTooManyCommands(),
-                        botUtils.retrieveChat(request.update).getId()
-                ));
-                return true;
+                return processOther(DataSaver.class, request);
             }
 
             String command = commands.get(0).trim();
 
-            if ("/start".equals(command)) {
+            if ("/start".equals(command)) { // TODO: 15.02.19 Add support for /label
 
                 bot.execute(botUtils.markdownMessage(
                         uiUtils.getErrors().getNeedlessStart(),
@@ -93,7 +90,7 @@ public class CommandHandler extends BotScenario {
      * @return a List<String> of all known commands, that are not links to some data
      */
     public static List<String> getKnownCommands() {
-        return Arrays.asList(SEARCH_COMMAND, HELP_COMMAND);
+        return Arrays.asList(SEARCH_COMMAND, LABELS_COMMAND, HELP_COMMAND);
     }
 
     private final Logger logger = LoggerFactory.getLogger(CommandHandler.class);

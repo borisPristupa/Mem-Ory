@@ -17,6 +17,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.Optional;
 
 public class DataForwarder extends StatelessBotScenario {
+    public static final String KEY_MESSAGE_ID = "message id";
     public static final String KEY_TO_CLIENT = "to user", KEY_URL = "url";
     public static final String RESULT_MAGIC_ID = "magic id";
 

@@ -19,7 +19,7 @@ public class Dispatcher extends BotScenario {
         if (request.update.hasMessage() && request.update.getMessage().hasText()) {
 
             String text = request.update.getMessage().getText();
-            if (containsCommand(text)) {
+            if (botUtils.containsCommand(text)) {
                 try {
                     if (!processOther(CommandHandler.class, request))
                         return false;
@@ -42,10 +42,6 @@ public class Dispatcher extends BotScenario {
         setStage(null);
         logger.info("Dispatching - Finished");
         return true;
-    }
-
-    private boolean containsCommand(String text) {
-        return text.matches("(.*\\s)?/\\w+(\\s|$).*");
     }
 
     public Dispatcher(ScenarioState scenarioState) {

@@ -24,6 +24,14 @@ public class BotUtils {
     private Long magicChatId;
     private BeanFactory beanFactory;
 
+    public boolean containsText(Update update) {
+        return update.hasMessage() && update.getMessage().hasText();
+    }
+
+    public boolean containsCommand(String text) {
+        return text.matches("^(\\s*)?/\\w+(\\s*)$");
+    }
+
     public SendMessage markdownMessage(String text, long chatId) {
         return new SendMessage()
                 .setChatId(chatId)

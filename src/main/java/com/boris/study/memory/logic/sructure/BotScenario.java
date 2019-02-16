@@ -7,6 +7,7 @@ import com.boris.study.memory.data.repository.ScenarioStateRepository;
 import com.boris.study.memory.utils.BotUtils;
 import com.boris.study.memory.utils.DataUtils;
 import com.boris.study.memory.utils.UIUtils;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class BotScenario implements Scenario<Request, Boolean> {
@@ -55,19 +56,19 @@ public abstract class BotScenario implements Scenario<Request, Boolean> {
     protected Boolean continueProcessing(Request request, boolean forceRestart) {
 
         if (forceRestart) {
-            state.setSubscenario(null);
-            state.setStage(null);
+            setSubscenario(null);
+            setStage(null);
             return true;
         }
 
-        if (null != state.getSubscenario()) {
+        if (null != getSubscenario()) {
 
             Class<? extends BotScenario> subscenarioClass =
-                    BotScenario.getScenarioClass(state.getSubscenario());
-            if (!botUtils.obtainScenario(subscenarioClass, state.getClient())
+                    BotScenario.getScenarioClass(getSubscenario());
+            if (!botUtils.obtainScenario(subscenarioClass, getClient())
                     .process(request, false))
                 return false;
-            state.setSubscenario(null);
+            setSubscenario(null);
         }
         return true;
     }
@@ -82,12 +83,21 @@ public abstract class BotScenario implements Scenario<Request, Boolean> {
         stateRepository.save(state);
     }
 
+    protected void setState(JSONObject state) {
+        this.state.setState(state);
+        stateRepository.save(this.state);
+    }
+
     protected String getSubscenario() {
         return state.getSubscenario();
     }
 
     protected Integer getStage() {
         return state.getStage();
+    }
+
+    protected JSONObject getState() {
+        return state.getState();
     }
 
     protected Client getClient() {

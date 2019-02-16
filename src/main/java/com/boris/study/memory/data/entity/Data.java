@@ -17,6 +17,9 @@ public class Data {
     @Column(name = "magic_id", unique = true, nullable = false)
     private Integer magicId;
 
+    @Column(name = "description", length = -1)
+    private String description;
+
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToMany(fetch = FetchType.EAGER)

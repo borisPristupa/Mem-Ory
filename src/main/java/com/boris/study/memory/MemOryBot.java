@@ -50,7 +50,7 @@ public class MemOryBot extends TelegramLongPollingBot {
             clientRepository.save(client);
             botUtils.obtainStatelessScenario(Greeter.class, client).processStateless(new Request(update));
         } else
-            botUtils.obtainScenario(Dispatcher.class, client).process(new Request(update));
+            botUtils.obtainScenario(Dispatcher.class, client).process(new Request(update), false);
 
     }
 
@@ -80,4 +80,5 @@ public class MemOryBot extends TelegramLongPollingBot {
     }
 
     private static Logger logger = LoggerFactory.getLogger(MemOryBot.class);
+
 }
