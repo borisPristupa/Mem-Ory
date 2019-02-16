@@ -10,12 +10,14 @@ CREATE TABLE IF NOT EXISTS scenario_state (
 	client_id int NOT NULL REFERENCES client (id) ON UPDATE CASCADE ON DELETE CASCADE,
 	subscenario text,
 	stage int,
+	state text NOT NULL DEFAULT '',
 	PRIMARY KEY(name, client_id)
 );
 
 CREATE TABLE IF NOT EXISTS "data" (
 	url text PRIMARY KEY,
-	magic_id int UNIQUE NOT NULL
+	magic_id int UNIQUE NOT NULL,
+	description text
 );
 
 CREATE TABLE IF NOT EXISTS label (

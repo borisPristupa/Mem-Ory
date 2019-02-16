@@ -1,8 +1,10 @@
 package com.boris.study.memory.data.entity;
 
+import com.boris.study.memory.data.StateConverter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.json.JSONObject;
 
 import javax.persistence.*;
 
@@ -33,6 +35,10 @@ public class ScenarioState {
 
     @Column(name = "subscenario", length = -1)
     private String subscenario;
+
+    @Convert(converter = StateConverter.class)
+    @Column(name = "state", nullable = false, length = -1)
+    private JSONObject state = new JSONObject();
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
