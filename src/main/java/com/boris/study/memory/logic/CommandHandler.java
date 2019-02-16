@@ -5,6 +5,7 @@ import com.boris.study.memory.data.entity.ScenarioState;
 import com.boris.study.memory.logic.data.DataSaver;
 import com.boris.study.memory.logic.data.DataShower;
 import com.boris.study.memory.logic.helpers.HelpShower;
+import com.boris.study.memory.logic.label.LabelNavigator;
 import com.boris.study.memory.logic.sructure.BotScenario;
 import com.boris.study.memory.logic.sructure.Request;
 import org.slf4j.Logger;
@@ -21,6 +22,9 @@ public class CommandHandler extends BotScenario {
 
     @Override
     public Boolean process(Request request, boolean forceRestart) {
+        if (!continueProcessing(request, forceRestart))
+            return false;
+
         Client client = getClient();
         logger.info("CommandHandler - Starting for " + client);
 
@@ -34,7 +38,7 @@ public class CommandHandler extends BotScenario {
 
             String command = commands.get(0).trim();
 
-            if ("/start".equals(command)) { // TODO: 15.02.19 Add support for /label
+            if ("/start".equals(command)) {
 
                 bot.execute(botUtils.markdownMessage(
                         uiUtils.getErrors().getNeedlessStart(),
@@ -48,6 +52,10 @@ public class CommandHandler extends BotScenario {
                 bot.execute(botUtils.markdownMessage(
                         "No data yet, nothing to search", botUtils.retrieveChat(request.update).getId()
                 ));
+            } else if (LABELS_COMMAND.equals(command)) {
+
+                if (!processOther(LabelNavigator.class, request))
+                    return false;
             } else if (dataUtils.isValidDataUrl(command)) {
 
                 boolean dataShowerFinished = processOther(DataShower.class, new Request(request.update) {{

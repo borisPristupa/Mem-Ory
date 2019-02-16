@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Chat;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
@@ -42,6 +44,13 @@ public class BotUtils {
     public SendMessage plainMessage(String text, long chatId) {
         return new SendMessage()
                 .setChatId(chatId)
+                .setText(text);
+    }
+
+    public EditMessageText plainEdit(Message edited, String text) {
+        return new EditMessageText()
+                .setChatId(edited.getChatId())
+                .setMessageId(edited.getMessageId())
                 .setText(text);
     }
 

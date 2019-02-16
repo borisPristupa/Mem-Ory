@@ -30,14 +30,17 @@ public class LabelsInitializer extends StatelessBotScenario {
                     video = new Label("video", client),
                     media = new Label("media", client),
                     contact = new Label("contact", client);
-            media.setSons(new HashSet<>(Arrays.asList(audio, photo, video)));
 
-            labelRepository.save(allData);
             labelRepository.save(audio);
             labelRepository.save(photo);
             labelRepository.save(video);
             labelRepository.save(contact);
-            labelRepository.saveAndFlush(media);
+
+            media.setSons(new HashSet<>(Arrays.asList(audio, photo, video)));
+            labelRepository.save(media);
+
+            allData.setSons(new HashSet<>(Arrays.asList(media, contact)));
+            labelRepository.save(allData);
 
             client.setLabels(new HashSet<>(Arrays.asList(
                     allData, audio, photo, video, media, contact)));

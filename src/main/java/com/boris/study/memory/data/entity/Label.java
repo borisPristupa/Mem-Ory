@@ -4,6 +4,8 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 @Entity
@@ -43,4 +45,26 @@ public class Label {
             joinColumns = {@JoinColumn(name = "parent")},
             inverseJoinColumns = {@JoinColumn(name = "son")})
     private Set<Label> sons;
+
+    public Set<Label> getAllSonsRecursively() {
+        Set<Label> result = new HashSet<>(sons);
+        LinkedList<Label> checkerList = new LinkedList<>(sons);
+        while (!checkerList.isEmpty()) {
+            checkerList.removeFirst().sons.forEach(label -> {
+                result.add(label);
+                checkerList.addLast(label);
+            });
+        }
+
+        result.add(this);
+        return result;
+    }
+
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "label_hierarchy",
+            joinColumns = {@JoinColumn(name = "son")},
+            inverseJoinColumns = {@JoinColumn(name = "parent")})
+    private Set<Label> parents;
 }
