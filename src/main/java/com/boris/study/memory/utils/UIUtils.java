@@ -27,7 +27,7 @@ public class UIUtils {
     @ToString
     public static class Errors {
         private String wrongChatType;
-        private String tooManyCommands;
+//        private String tooManyCommands;
         private String unknownCommand;
         private String needlessStart;
         private String noDataByUrl;
