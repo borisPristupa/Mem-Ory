@@ -38,7 +38,7 @@ public class Descriptioner extends BotScenario {
                     throw new IllegalArgumentException("No data url passed");
 
                 bot.execute(botUtils.plainMessage(
-                        "Send some short description for data " + request.get(Key.DATA_URL.name()),
+                        "Send some short description this data",
                         botUtils.retrieveChat(request.update).getId()
                 ));
 
@@ -60,6 +60,11 @@ public class Descriptioner extends BotScenario {
             dataRepository.save(data);
 
             request.put(DataSaver.Key.DONT_SAVE.name(), "true");
+
+            bot.execute(botUtils.plainMessage(
+                    "Description saved successfully",
+                    botUtils.retrieveChat(request.update).getId()
+            ));
 
         } catch (Exception e) {
             logger.error("Failed to process Descriptioner in update " + request.update, e);
