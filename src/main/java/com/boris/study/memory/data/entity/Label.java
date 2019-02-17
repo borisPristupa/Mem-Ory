@@ -38,6 +38,19 @@ public class Label {
     @JoinColumn(name = "client_id", nullable = false, insertable = false, updatable = false)
     private Client client;
 
+    public void addSon(Label son) {
+        if (null == sons) {
+            sons = new HashSet<>();
+        }
+        sons.add(son);
+    }
+
+    public Set<Label> getSons() {
+        if (null == sons)
+            sons = new HashSet<>();
+        return sons;
+    }
+
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToMany(fetch = FetchType.EAGER)
@@ -47,10 +60,13 @@ public class Label {
     private Set<Label> sons;
 
     public Set<Label> getAllSonsRecursively() {
+        if (null == sons)
+            sons = new HashSet<>();
+
         Set<Label> result = new HashSet<>(sons);
         LinkedList<Label> checkerList = new LinkedList<>(sons);
         while (!checkerList.isEmpty()) {
-            checkerList.removeFirst().sons.forEach(label -> {
+            checkerList.removeFirst().getSons().forEach(label -> {
                 result.add(label);
                 checkerList.addLast(label);
             });
