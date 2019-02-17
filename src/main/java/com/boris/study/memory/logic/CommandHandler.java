@@ -26,53 +26,58 @@ public class CommandHandler extends BotScenario {
             return false;
 
         Client client = getClient();
-        logger.info("CommandHandler - Starting for " + client);
+        int stageHandled = 0;
 
-        try {
-            List<String> commands = retrieveCommands(request.update.getMessage().getText());
-            if (commands.size() == 0) {
-                throw new IllegalArgumentException("An update without commands passed to CommandHandler");
-            } else if (commands.size() > 1) {
-                return processOther(DataSaver.class, request);
+        if (null == getStage() || getStage() < stageHandled) {
+            logger.info("CommandHandler - Starting for " + client);
+            try {
+                List<String> commands = retrieveCommands(request.update.getMessage().getText());
+                if (commands.size() == 0) {
+                    throw new IllegalArgumentException("An update without commands passed to CommandHandler");
+                } else if (commands.size() > 1) {
+                    return processOther(DataSaver.class, request);
+                }
+
+                String command = commands.get(0).trim();
+                setStage(stageHandled);
+
+                if ("/start".equals(command)) {
+
+                    bot.execute(botUtils.markdownMessage(
+                            uiUtils.getErrors().getNeedlessStart(),
+                            botUtils.retrieveChat(request.update).getId()
+                    ));
+                } else if (HELP_COMMAND.equals(command)) {
+
+                    processStateless(HelpShower.class, request);
+                } else if (SEARCH_COMMAND.equals(command)) {
+
+                    bot.execute(botUtils.markdownMessage(
+                            "No data yet, nothing to search", botUtils.retrieveChat(request.update).getId()
+                    ));
+                } else if (LABELS_COMMAND.equals(command)) {
+
+                    if (!processOther(LabelNavigator.class, request))
+                        return false;
+                } else if (dataUtils.isValidDataUrl(command)) {
+
+                    boolean dataShowerFinished = processOther(DataShower.class, new Request(request.update) {{
+                        put(DataShower.KEY_URL, command);
+                    }});
+                    if (!dataShowerFinished)
+                        return false;
+                } else {
+                    bot.execute(botUtils.markdownMessage(
+                            uiUtils.getErrors().getUnknownCommand(),
+                            botUtils.retrieveChat(request.update).getId()
+                    ));
+                }
+            } catch (Exception e) {
+                logger.error("Failed to handle commands in request " + request, e);
             }
-
-            String command = commands.get(0).trim();
-
-            if ("/start".equals(command)) {
-
-                bot.execute(botUtils.markdownMessage(
-                        uiUtils.getErrors().getNeedlessStart(),
-                        botUtils.retrieveChat(request.update).getId()
-                ));
-            } else if (HELP_COMMAND.equals(command)) {
-
-                processStateless(HelpShower.class, request);
-            } else if (SEARCH_COMMAND.equals(command)) {
-
-                bot.execute(botUtils.markdownMessage(
-                        "No data yet, nothing to search", botUtils.retrieveChat(request.update).getId()
-                ));
-            } else if (LABELS_COMMAND.equals(command)) {
-
-                if (!processOther(LabelNavigator.class, request))
-                    return false;
-            } else if (dataUtils.isValidDataUrl(command)) {
-
-                boolean dataShowerFinished = processOther(DataShower.class, new Request(request.update) {{
-                    put(DataShower.KEY_URL, command);
-                }});
-                if (!dataShowerFinished)
-                    return false;
-            } else {
-                bot.execute(botUtils.markdownMessage(
-                        uiUtils.getErrors().getUnknownCommand(),
-                        botUtils.retrieveChat(request.update).getId()
-                ));
-            }
-        } catch (Exception e) {
-            logger.error("Failed to handle commands in request " + request, e);
         }
 
+        setStage(null);
         logger.info("CommandHandler - Finished for " + client);
         return true;
     }

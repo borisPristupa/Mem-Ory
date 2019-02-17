@@ -14,29 +14,38 @@ public class Dispatcher extends BotScenario {
         if (!continueProcessing(request, forceRestart))
             return false;
 
-        logger.info("Dispatching - Starting for client " + getClient());
+        int stageDispatched = 0;
 
-        if (request.update.hasMessage()) {
-            if (request.update.getMessage().hasText() &&
-                    botUtils.containsCommand(request.update.getMessage().getText())) {
-                try {
-                    if (!processOther(CommandHandler.class, request))
-                        return false;
-                } catch (Exception e) {
-                    logger.error("Failed to handle commands in request " + request, e);
+        if (null == getStage() || getStage() < stageDispatched) {
+            logger.info("Dispatching - Starting for client " + getClient());
+
+            if (request.update.hasMessage()) {
+                if (request.update.getMessage().hasText() &&
+                        botUtils.containsCommand(request.update.getMessage().getText())) {
+                    try {
+                        if (!processOther(CommandHandler.class, request)) {
+                            setStage(stageDispatched);
+                            return false;
+                        }
+                    } catch (Exception e) {
+                        logger.error("Failed to handle commands in request " + request, e);
+                    }
+                } else {
+                    try {
+                        if (!processOther(DataSaver.class, request)) {
+                            setStage(stageDispatched);
+                            return false;
+                        }
+                    } catch (Exception e) {
+                        logger.error("Failed to handle data saving in request " + request, e);
+                    }
                 }
             } else {
-                try {
-                    if (!processOther(DataSaver.class, request))
-                        return false;
-                } catch (Exception e) {
-                    logger.error("Failed to handle data saving in request " + request, e);
-                }
+                logger.info("No message in request.update! Ignoring unexpected request.update for " + getClient() + ": " + request.update);
             }
-        } else {
-            logger.info("No message in request.update! Ignoring unexpected request.update for " + getClient() + ": " + request.update);
         }
 
+        setStage(null);
         logger.info("Dispatching - Finished");
         return true;
     }

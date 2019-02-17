@@ -8,6 +8,8 @@ import java.util.Random;
 
 @Component
 public class DataUtils {
+    public static final int LABEL_NAME_LENGTH = 30;
+
     private final DataRepository dataRepository;
 
     public String generateUrl() {
@@ -34,6 +36,10 @@ public class DataUtils {
     @Autowired
     public DataUtils(DataRepository dataRepository) {
         this.dataRepository = dataRepository;
+    }
+
+    public boolean isValidLabelName(String name) {
+        return null != name && name.length() < LABEL_NAME_LENGTH && !name.contains("\n");
     }
 
     public boolean isValidDataUrl(String text) {

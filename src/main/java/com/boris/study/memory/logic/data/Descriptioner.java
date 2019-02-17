@@ -38,7 +38,7 @@ public class Descriptioner extends BotScenario {
                     throw new IllegalArgumentException("No data url passed");
 
                 bot.execute(botUtils.plainMessage(
-                        "Send some short description this data",
+                        "Send some short description for this data",
                         botUtils.retrieveChat(request.update).getId()
                 ));
 
@@ -58,8 +58,6 @@ public class Descriptioner extends BotScenario {
                             getState().get(Key.DATA_URL.name()).toString()));
             data.setDescription(description);
             dataRepository.save(data);
-
-            request.put(DataSaver.Key.DONT_SAVE.name(), "true");
 
             bot.execute(botUtils.plainMessage(
                     "Description saved successfully",
