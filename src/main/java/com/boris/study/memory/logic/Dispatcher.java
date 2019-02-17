@@ -16,10 +16,9 @@ public class Dispatcher extends BotScenario {
 
         logger.info("Dispatching - Starting for client " + getClient());
 
-        if (request.update.hasMessage() && request.update.getMessage().hasText()) {
-
-            String text = request.update.getMessage().getText();
-            if (botUtils.containsCommand(text)) {
+        if (request.update.hasMessage()) {
+            if (request.update.getMessage().hasText() &&
+                    botUtils.containsCommand(request.update.getMessage().getText())) {
                 try {
                     if (!processOther(CommandHandler.class, request))
                         return false;
@@ -34,12 +33,10 @@ public class Dispatcher extends BotScenario {
                     logger.error("Failed to handle data saving in request " + request, e);
                 }
             }
-
         } else {
             logger.info("No message in request.update! Ignoring unexpected request.update for " + getClient() + ": " + request.update);
         }
 
-        setStage(null);
         logger.info("Dispatching - Finished");
         return true;
     }
