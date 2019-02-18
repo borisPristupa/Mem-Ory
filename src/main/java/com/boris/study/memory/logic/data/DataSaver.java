@@ -4,7 +4,6 @@ import com.boris.study.memory.data.entity.Client;
 import com.boris.study.memory.data.entity.Data;
 import com.boris.study.memory.data.entity.ScenarioState;
 import com.boris.study.memory.data.repository.DataRepository;
-import com.boris.study.memory.data.repository.LabelRepository;
 import com.boris.study.memory.logic.sructure.BotScenario;
 import com.boris.study.memory.logic.sructure.Request;
 import org.slf4j.Logger;
@@ -17,7 +16,6 @@ public class DataSaver extends BotScenario {
     }
 
     private DataRepository dataRepository;
-    private LabelRepository labelRepository;
 
     @Override
     public Boolean process(Request request, boolean forceRestart) {
@@ -73,11 +71,6 @@ public class DataSaver extends BotScenario {
     @Autowired
     public void setDataRepository(DataRepository dataRepository) {
         this.dataRepository = dataRepository;
-    }
-
-    @Autowired
-    public void setLabelRepository(LabelRepository labelRepository) {
-        this.labelRepository = labelRepository;
     }
 
     private final Logger logger = LoggerFactory.getLogger(DataSaver.class);
