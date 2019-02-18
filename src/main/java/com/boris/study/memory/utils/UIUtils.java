@@ -13,9 +13,10 @@ import org.springframework.stereotype.Component;
 @PropertySource(value = "messages_ru.properties", encoding = "UTF-8")
 @ConfigurationProperties(prefix = "messages", ignoreUnknownFields = false)
 public class UIUtils {
+    private Errors errors;
+    private Config config;
     private String help;
     private String commands;
-    private Errors errors;
     private String greeting;
 
     private String labelNavigationInfo;
@@ -36,5 +37,12 @@ public class UIUtils {
         private String unknownCommand;
         private String needlessStart;
         private String noDataByUrl;
+    }
+
+    @Setter
+    @Getter
+    @ToString
+    public static class Config {
+        private String url, txt, click;
     }
 }

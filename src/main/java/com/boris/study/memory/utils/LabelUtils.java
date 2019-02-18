@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 
 @Component
 public class LabelUtils {
-    public static final String DELIMITER = "I";
-
     @Autowired
     private LabelRepository labelRepository;
     @Autowired
     private DataRepository dataRepository;
+    @Autowired
+    private DataUtils dataUtils;
 
     public Label obtain(String name, Long clientId) throws IllegalStateException {
         return labelRepository.findByNameAndClientId(name, clientId)
@@ -27,13 +27,17 @@ public class LabelUtils {
     }
 
     // Only works correctly if you update your path to this label first
-    public InlineKeyboardMarkup createNavigationMarkup(Label label, String path) {
+    public InlineKeyboardMarkup createNavigationMarkup(Label label) {
         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
         if (null != label.getParents() && !label.getParents().isEmpty()) {
-            InlineKeyboardButton levelUp = new InlineKeyboardButton("Go back to '" +
-                    getLevelUpDir(path) + "'");
-            levelUp.setCallbackData(getLevelUpDir(path));
-            buttons.add(Collections.singletonList(levelUp));
+            List<Label> parents = new ArrayList<>(label.getParents());
+            parents.sort(Comparator.comparing(Label::getName));
+            parents.forEach(parent -> {
+                InlineKeyboardButton levelUp = new InlineKeyboardButton("Go back to '" +
+                        parent.getName() + "'");
+                levelUp.setCallbackData("L " + parent.getName());
+                buttons.add(Collections.singletonList(levelUp));
+            });
         }
 
         int labelsInRow = label.getSons().size() > 4 ? 3 : 2;
@@ -45,7 +49,7 @@ public class LabelUtils {
             for (int j = 0; j < labelsInRow && i * labelsInRow + j < sons.size(); j++) {
                 Label son = sons.get(i * labelsInRow + j);
                 InlineKeyboardButton labelButton = new InlineKeyboardButton(son.getName());
-                labelButton.setCallbackData(son.getName());
+                labelButton.setCallbackData("L " + son.getName());
                 row.add(labelButton);
             }
             if (!row.isEmpty())
@@ -58,58 +62,18 @@ public class LabelUtils {
         StringBuilder dataContent =
                 new StringBuilder("Here is a list of data, marked by '" + label.getName() + "'\n")
                         .append("-------------------------------------");
-        int lengthWithoutData = dataContent.length();
 
         Set<String> labelNamesRecursive = label.getAllSonsRecursively().stream()
                 .map(Label::getName)
                 .collect(Collectors.toSet());
+        labelNamesRecursive.add(label.getName());
 
-        Set<Data> labeledData =
-                dataRepository.findAllByLabelNamesAndClientId(labelNamesRecursive, label.getClient().getId());
+        Set<Data> labeledData = dataRepository
+                .findAllByLabelNamesAndClientId(labelNamesRecursive, label.getClient().getId());
 
-        int i = 1;
-        for (Iterator<Data> it = labeledData.iterator(); it.hasNext(); i++) {
-            Data data = it.next();
-            dataContent.append("\n")
-                    .append(i).append(". ") // number of data in the list
-                    .append(data.getUrl()) // data's url
-                    .append(" - ").append(data.getDescription()).append("\n"); // data's description
-        }
-
-        if (dataContent.length() == lengthWithoutData) {
-            dataContent.append("\n").append("Well, no data yet");
-        }
+        dataContent.append("\n").append(dataUtils.formDataList(labeledData));
 
         return dataContent.toString();
     }
 
-    public String updatePath(String labelName, String path) {
-        if (isLabelInPath(labelName, path)) {
-            return path.substring(0, path.indexOf(labelName) + labelName.length());
-        } else {
-            return path + DELIMITER + labelName;
-        }
-    }
-
-    public boolean isLabelInPath(String label, String path) {
-        return Arrays.asList(path.split(DELIMITER)).contains(label);
-    }
-
-    public String getCurrentDir(String path) {
-        String[] hierarchy = path.split(DELIMITER);
-        if (hierarchy.length > 0) {
-            return hierarchy[hierarchy.length - 1];
-        } else {
-            return "NONE";
-        }
-    }
-
-    public String getLevelUpDir(String path) {
-        String[] hierarchy = path.split(DELIMITER);
-        if (hierarchy.length > 1) {
-            return hierarchy[hierarchy.length - 2];
-        } else {
-            return "NONE";
-        }
-    }
 }

@@ -1,10 +1,13 @@
 package com.boris.study.memory.utils;
 
+import com.boris.study.memory.data.entity.Data;
 import com.boris.study.memory.data.repository.DataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Iterator;
 import java.util.Random;
+import java.util.Set;
 
 @Component
 public class DataUtils {
@@ -31,6 +34,22 @@ public class DataUtils {
 
         } while (dataRepository.existsById(url.toString()));
         return url.toString();
+    }
+
+    public String formDataList(Set<Data> dataSet) {
+        StringBuilder result = new StringBuilder();
+        int i = 1;
+        for (Iterator<Data> it = dataSet.iterator(); it.hasNext(); i++) {
+            Data data = it.next();
+            result.append(i).append(". ") // number of data in the list
+                    .append(data.getUrl()) // data's url
+                    .append(" - ").append(data.getDescription()).append("\n"); // data's description
+        }
+
+        if (dataSet.isEmpty()) {
+            result.append("Well, no data yet");
+        }
+        return result.toString();
     }
 
     @Autowired
