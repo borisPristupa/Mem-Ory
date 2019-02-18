@@ -39,16 +39,26 @@ public class Label {
     private Client client;
 
     public void addSon(Label son) {
-        if (null == sons) {
-            sons = new HashSet<>();
-        }
-        sons.add(son);
+        getSons().add(son);
     }
 
     public Set<Label> getSons() {
         if (null == sons)
             sons = new HashSet<>();
         return sons;
+    }
+
+    public Set<Label> getAllSonsRecursively() {
+        Set<Label> result = new HashSet<>();
+        LinkedList<Label> checkerList = new LinkedList<>(result);
+        checkerList.add(this);
+        while (!checkerList.isEmpty()) {
+            checkerList.removeFirst().getSons().forEach(label -> {
+                result.add(label);
+                checkerList.addLast(label);
+            });
+        }
+        return result;
     }
 
     @ToString.Exclude
@@ -59,20 +69,25 @@ public class Label {
             inverseJoinColumns = {@JoinColumn(name = "son")})
     private Set<Label> sons;
 
-    public Set<Label> getAllSonsRecursively() {
-        if (null == sons)
-            sons = new HashSet<>();
+    public Set<Label> getParents() {
+        if (null == parents)
+            parents = new HashSet<>();
+        return parents;
+    }
 
-        Set<Label> result = new HashSet<>(sons);
-        LinkedList<Label> checkerList = new LinkedList<>(sons);
+    public Set<Label> getAllParentsRecursively() {
+        if (null == parents)
+            parents = new HashSet<>();
+
+        Set<Label> result = new HashSet<>();
+        LinkedList<Label> checkerList = new LinkedList<>(result);
+        checkerList.add(this);
         while (!checkerList.isEmpty()) {
-            checkerList.removeFirst().getSons().forEach(label -> {
+            checkerList.removeFirst().getParents().forEach(label -> {
                 result.add(label);
                 checkerList.addLast(label);
             });
         }
-
-        result.add(this);
         return result;
     }
 
