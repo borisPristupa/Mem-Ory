@@ -15,6 +15,11 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class BotUtils {
@@ -43,6 +48,18 @@ public class BotUtils {
         return new SendMessage()
                 .setChatId(chatId)
                 .setText(text);
+    }
+
+    public ReplyKeyboardMarkup oneColumnReplyMarkup(List<String> commands) {
+        return new ReplyKeyboardMarkup().setKeyboard(
+                commands.stream()
+                        .map(command -> {
+                            KeyboardRow row = new KeyboardRow();
+                            row.add(command);
+                            return row;
+                        })
+                        .collect(Collectors.toList())
+        ).setResizeKeyboard(true);
     }
 
     public Client retrieveClient(Update update) {

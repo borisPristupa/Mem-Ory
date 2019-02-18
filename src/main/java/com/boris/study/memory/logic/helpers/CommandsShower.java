@@ -8,11 +8,7 @@ import com.boris.study.memory.logic.sructure.StatelessBotScenario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
-import java.util.stream.Collectors;
 
 public class CommandsShower extends StatelessBotScenario {
 
@@ -25,19 +21,7 @@ public class CommandsShower extends StatelessBotScenario {
                 uiUtils.getCommands(),
                 botUtils.retrieveChat(request.update).getId()
         );
-        ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
-
-        markup.setResizeKeyboard(true);
-        markup.setKeyboard(CommandHandler.getKnownCommands()
-                .stream()
-                .map(command -> {
-                    KeyboardRow row = new KeyboardRow();
-                    row.add(command);
-                    return row;
-                })
-                .collect(Collectors.toList()));
-
-        commandsMessage.setReplyMarkup(markup);
+        commandsMessage.setReplyMarkup(botUtils.oneColumnReplyMarkup(CommandHandler.getKnownCommands()));
         try {
             bot.execute(commandsMessage);
         } catch (TelegramApiException e) {
