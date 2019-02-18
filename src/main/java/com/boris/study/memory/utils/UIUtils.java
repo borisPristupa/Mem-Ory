@@ -18,8 +18,14 @@ public class UIUtils {
     private Errors errors;
     private String greeting;
 
+    private String labelNavigationInfo;
+
     public String getGreeting(String name) {
         return String.format(greeting, name);
+    }
+
+    public String getLabelNavigationInfo() {
+        return String.format(labelNavigationInfo, DataUtils.LABEL_NAME_LENGTH);
     }
 
     @Setter
@@ -27,7 +33,6 @@ public class UIUtils {
     @ToString
     public static class Errors {
         private String wrongChatType;
-//        private String tooManyCommands;
         private String unknownCommand;
         private String needlessStart;
         private String noDataByUrl;
