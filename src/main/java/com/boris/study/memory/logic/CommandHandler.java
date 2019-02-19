@@ -4,6 +4,7 @@ import com.boris.study.memory.data.entity.Client;
 import com.boris.study.memory.data.entity.ScenarioState;
 import com.boris.study.memory.logic.data.DataSaver;
 import com.boris.study.memory.logic.data.DataShower;
+import com.boris.study.memory.logic.helpers.CommandsShower;
 import com.boris.study.memory.logic.helpers.HelpShower;
 import com.boris.study.memory.logic.label.LabelNavigator;
 import com.boris.study.memory.logic.sructure.BotScenario;
@@ -18,7 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CommandHandler extends BotScenario {
-    private static final String SEARCH_COMMAND = "/search", LABELS_COMMAND = "/label", HELP_COMMAND = "/help";
+    private static final String SEARCH_COMMAND = "/search", HELP_COMMAND = "/help";
 
     @Override
     public Boolean process(Request request, boolean forceRestart) {
@@ -50,12 +51,8 @@ public class CommandHandler extends BotScenario {
                 } else if (HELP_COMMAND.equals(command)) {
 
                     processStateless(HelpShower.class, request);
+                    processStateless(CommandsShower.class, request);
                 } else if (SEARCH_COMMAND.equals(command)) {
-
-                    bot.execute(botUtils.markdownMessage(
-                            "No data yet, nothing to search", botUtils.retrieveChat(request.update).getId()
-                    ));
-                } else if (LABELS_COMMAND.equals(command)) {
 
                     if (!processOther(LabelNavigator.class, request))
                         return false;
@@ -101,7 +98,7 @@ public class CommandHandler extends BotScenario {
      * @return a List<String> of all known commands, that are not links to some data
      */
     public static List<String> getKnownCommands() {
-        return Arrays.asList(SEARCH_COMMAND, LABELS_COMMAND, HELP_COMMAND);
+        return Arrays.asList(SEARCH_COMMAND, HELP_COMMAND);
     }
 
     private final Logger logger = LoggerFactory.getLogger(CommandHandler.class);

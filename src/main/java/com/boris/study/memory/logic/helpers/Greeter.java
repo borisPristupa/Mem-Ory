@@ -23,6 +23,7 @@ public class Greeter extends StatelessBotScenario {
 
             processStateless(LabelsInitializer.class, request);
             processStateless(HelpShower.class, request);
+            processStateless(CommandsShower.class, request);
         } catch (TelegramApiException e) {
             logger.error("Exception while greeting in request " + request, e);
         }

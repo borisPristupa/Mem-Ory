@@ -2,6 +2,7 @@ package com.boris.study.memory.logic;
 
 import com.boris.study.memory.data.entity.ScenarioState;
 import com.boris.study.memory.logic.data.DataSaver;
+import com.boris.study.memory.logic.helpers.HelpShower;
 import com.boris.study.memory.logic.sructure.BotScenario;
 import com.boris.study.memory.logic.sructure.Request;
 import org.slf4j.Logger;
@@ -11,6 +12,12 @@ public class Dispatcher extends BotScenario {
 
     @Override
     public Boolean process(Request request, boolean forceRestart) {
+        if (request.update.hasMessage() && request.update.getMessage().hasText()
+                && "/help".equals(request.update.getMessage().getText())) {
+            processStateless(HelpShower.class, request);
+            return true;
+        }
+
         if (!continueProcessing(request, forceRestart))
             return false;
 

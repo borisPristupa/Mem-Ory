@@ -17,8 +17,6 @@ public class HelpShower extends StatelessBotScenario {
                     uiUtils.getHelp(),
                     botUtils.retrieveChat(request.update).getId()
             ));
-
-            processStateless(CommandsShower.class, request);
         } catch (TelegramApiException e) {
             logger.error("Failed to show help in request " + request, e);
         }
