@@ -61,11 +61,9 @@ public class CommandHandler extends BotScenario {
                         return false;
                 } else if (dataUtils.isValidDataUrl(command)) {
 
-                    boolean dataShowerFinished = processOther(DataShower.class, new Request(request.update) {{
+                    processStateless(DataShower.class, new Request(request.update) {{
                         put(DataShower.KEY_URL, command);
                     }});
-                    if (!dataShowerFinished)
-                        return false;
                 } else {
                     bot.execute(botUtils.markdownMessage(
                             uiUtils.getErrors().getUnknownCommand(),
