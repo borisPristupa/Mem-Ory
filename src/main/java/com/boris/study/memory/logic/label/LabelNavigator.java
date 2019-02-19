@@ -7,8 +7,7 @@ import com.boris.study.memory.data.entity.ScenarioState;
 import com.boris.study.memory.data.repository.DataRepository;
 import com.boris.study.memory.data.repository.LabelRepository;
 import com.boris.study.memory.logic.ScenarioConfig;
-import com.boris.study.memory.logic.data.DataSaver;
-import com.boris.study.memory.logic.data.LabelAssigner;
+import com.boris.study.memory.logic.data.*;
 import com.boris.study.memory.logic.helpers.CommandsShower;
 import com.boris.study.memory.logic.sructure.BotScenario;
 import com.boris.study.memory.logic.sructure.Request;
@@ -54,6 +53,7 @@ public class LabelNavigator extends BotScenario {
 
         int stageInitialized = 0;
         int stageDataSaved = 1;
+        int stageDataDescriptionModified = 2;
 
         if (null == getStage() || getStage() < stageInitialized) {
             logger.info("LabelNavigator - Starting for " + client);
@@ -71,6 +71,11 @@ public class LabelNavigator extends BotScenario {
             assignLabelToData(currentName, newDataUrl, request);
             updateNavigator(getCurrentLabel(), request);
 
+            setStage(stageInitialized);
+            return false;
+        }
+        if (null != getStage() && getStage() == stageDataDescriptionModified) {
+            updateNavigator(getCurrentLabel(), request);
             setStage(stageInitialized);
             return false;
         }
@@ -139,7 +144,8 @@ public class LabelNavigator extends BotScenario {
                     } catch (TelegramApiException e) {
                         logger.error("Failed to send labeled data list in request " + request, e);
                     }
-                } else if ("Delete label".equals(text)) {
+                }
+                else if ("Delete label".equals(text)) {
                     Label currentLabel = getCurrentLabel();
                     if (currentLabel.getName().equals("all data")) {
                         try {
@@ -174,19 +180,22 @@ public class LabelNavigator extends BotScenario {
                                     exception);
                         }
                     }
-                } else if ("Configuration".equals(text)) {
+                }
+                else if ("Configuration".equals(text)) {
 
                     sendConfig(clickConfig, request);
                     sendConfig(txtConfig, request);
                     sendConfig(urlConfig, request);
-                } else if ("To main menu".equals(text)) {
+                }
+                else if ("To main menu".equals(text)) {
 
                     processStateless(CommandsShower.class, request);
                     setState(new JSONObject());
                     setStage(null);
                     logger.info("LabelNavigator - Finished for " + client);
                     return true;
-                } else if (dataUtils.isValidDataUrl(text)) {
+                }
+                else if (dataUtils.isValidDataUrl(text)) {
                     if (!dataRepository.existsById(text)) {
                         try {
                             bot.execute(botUtils.markdownMessage(
@@ -196,28 +205,42 @@ public class LabelNavigator extends BotScenario {
                         } catch (TelegramApiException e) {
                             logger.error("Couldn't send error to client + " + client, e);
                         }
-                    } else { // treated as a name of a label
+                    } else {
                         Data data = dataRepository.findByUrl(text).get();
-                        Label label = labelUtils.obtain(getCurrentLabelName(), client.getId());
 
-                        if (data.getLabels().contains(label)) {
-                            try {
-                                bot.execute(botUtils.plainMessage("Label '" + label.getName() +
-                                                "' is already assigned to this data",
-                                        botUtils.retrieveChat(request.update).getId()));
-                            } catch (TelegramApiException e) {
-                                logger.error(
-                                        String.format(
-                                                "Couldn't tell client %s that label %s is already assigned to %s",
-                                                client, label, data),
-                                        e);
-                            }
-                        } else {
-                            assignLabelToData(getCurrentLabelName(), request.update.getMessage().getText(), request);
-                            updateNavigator(getCurrentLabel(), request);
+                        switch (getConfigState(urlConfig)) {
+                            case "send":
+                                request.put(DataShower.KEY_URL, text);
+                                processStateless(DataShower.class, request);
+                                break;
+                            case "describe":
+                                request.put(Descriptioner.Key.DATA_URL.name(), text);
+                                if (!processOther(Descriptioner.class, request)) {
+                                    setStage(stageDataDescriptionModified);
+                                    return false;
+                                }
+                                break;
+                            case "label":
+                                Label label = labelUtils.obtain(getCurrentLabelName(), client.getId());
+                                if (data.getLabels().contains(label)) {
+                                    removeLabelFromData(label, data, request);
+                                } else {
+                                    assignLabelToData(getCurrentLabelName(), data.getUrl(), request);
+                                }
+                                updateNavigator(getCurrentLabel(), request);
+                                break;
+                            case "delete":
+                                request.put(DataDeleter.Key.DATA_URL.name(), data.getUrl());
+                                processStateless(DataDeleter.class, request);
+                                updateNavigator(getCurrentLabel(), request);
+                                break;
+                            default:
+                                throw new IllegalStateException("Unknown urlConfig state: " + getConfigState(urlConfig));
                         }
+
                     }
-                } else {
+                }
+                else {
                     if (dataUtils.isValidLabelName(text)) {
                         String name = text.toLowerCase();
                         Label label = labelRepository.findByNameAndClientId(name, client.getId()).orElseGet(() -> {
@@ -428,6 +451,21 @@ public class LabelNavigator extends BotScenario {
         request.put(LabelAssigner.Key.URL.name(), dataUrl);
         request.put(LabelAssigner.Key.LABEL_NAME.name(), label);
         processStateless(LabelAssigner.class, request);
+    }
+
+    private void removeLabelFromData(Label label, Data data, Request request) {
+        if (data.getLabels().contains(label)) {
+            data.getLabels().remove(label);
+            dataRepository.save(data);
+
+            try {
+                bot.execute(botUtils.plainMessage("Label '" + label.getName() +
+                        "' is no more assigned to this data", botUtils.retrieveChat(request.update).getId()));
+            } catch (TelegramApiException e) {
+                logger.error("Failed to inform about removing label " + label + " from data, " + request, e);
+            }
+        } else
+        throw new IllegalStateException("Label " + label + " was not assigned before, " + request);
     }
 
     private String getCurrentLabelName() {
