@@ -26,8 +26,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 
+import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,9 +47,6 @@ public class LabelNavigator extends BotScenario {
     public Boolean process(Request request, boolean forceRestart) {
         if (!continueProcessing(request, forceRestart))
             return false;
-
-        if (null == urlConfig)
-            initConfig();
 
         Client client = getClient();
 
@@ -87,7 +86,7 @@ public class LabelNavigator extends BotScenario {
 
             if ("L".equals(key)) {
                 Label callbackLabel = labelUtils.obtain(value, client.getId());
-                if ("delete".equals(getConfigState(clickConfig))) {
+                if ("remove".equals(getConfigState(clickConfig))) {
                     if (getCurrentLabel().getSons().contains(callbackLabel)) {
                         getCurrentLabel().getSons().remove(callbackLabel);
                         callbackLabel.getParents().remove(getCurrentLabel());
@@ -144,8 +143,7 @@ public class LabelNavigator extends BotScenario {
                     } catch (TelegramApiException e) {
                         logger.error("Failed to send labeled data list in request " + request, e);
                     }
-                }
-                else if ("Delete label".equals(text)) {
+                } else if ("Delete label".equals(text)) {
                     Label currentLabel = getCurrentLabel();
                     if (currentLabel.getName().equals("all data")) {
                         try {
@@ -180,22 +178,19 @@ public class LabelNavigator extends BotScenario {
                                     exception);
                         }
                     }
-                }
-                else if ("Configuration".equals(text)) {
+                } else if ("Configuration".equals(text)) {
 
                     sendConfig(clickConfig, request);
                     sendConfig(txtConfig, request);
                     sendConfig(urlConfig, request);
-                }
-                else if ("To main menu".equals(text)) {
+                } else if ("To main menu".equals(text)) {
 
                     processStateless(CommandsShower.class, request);
                     setState(new JSONObject());
                     setStage(null);
                     logger.info("LabelNavigator - Finished for " + client);
                     return true;
-                }
-                else if (dataUtils.isValidDataUrl(text)) {
+                } else if (dataUtils.isValidDataUrl(text)) {
                     if (!dataRepository.existsById(text)) {
                         try {
                             bot.execute(botUtils.markdownMessage(
@@ -239,8 +234,7 @@ public class LabelNavigator extends BotScenario {
                         }
 
                     }
-                }
-                else {
+                } else {
                     if (dataUtils.isValidLabelName(text)) {
                         String name = text.toLowerCase();
                         Label label = labelRepository.findByNameAndClientId(name, client.getId()).orElseGet(() -> {
@@ -389,9 +383,18 @@ public class LabelNavigator extends BotScenario {
     }
 
     private Set<String> getCheckedLabelsNames() {
-        return getState().keySet().stream().filter(s -> s.equals(s.toLowerCase())).collect(Collectors.toSet());
+        Set<Label> selected =
+                getState().keySet()
+                        .stream()
+                        .filter(s -> s.equals(s.toLowerCase()))
+                        .map(s -> labelUtils.obtain(s, getClient().getId()))
+                        .collect(Collectors.toSet());
+        Set<Label> temp = new HashSet<>(selected);
+        temp.forEach(label -> selected.addAll(label.getAllSonsRecursively()));
+        return selected.stream().map(Label::getName).collect(Collectors.toSet());
     }
 
+    @PostConstruct
     private void initConfig() {
         urlConfig = new ScenarioConfig("URL", uiUtils.getConfig().getUrl(),
                 Arrays.asList("send", "describe", "label", "delete"));
@@ -408,7 +411,7 @@ public class LabelNavigator extends BotScenario {
             setConfigState(txtConfig, getConfigState(txtConfig));
 
         clickConfig = new ScenarioConfig("CLICK", uiUtils.getConfig().getClick(),
-                Arrays.asList("select & goto", "delete"));
+                Arrays.asList("select & goto", "remove"));
         if (!getState().has(clickConfig.getConfigName())) {
             setConfigState(clickConfig, "select & goto");
         } else
@@ -465,7 +468,7 @@ public class LabelNavigator extends BotScenario {
                 logger.error("Failed to inform about removing label " + label + " from data, " + request, e);
             }
         } else
-        throw new IllegalStateException("Label " + label + " was not assigned before, " + request);
+            throw new IllegalStateException("Label " + label + " was not assigned before, " + request);
     }
 
     private String getCurrentLabelName() {
