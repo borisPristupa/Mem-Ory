@@ -43,8 +43,8 @@ public class LabelAssigner extends StatelessBotScenario {
 
             dataRepository.save(data);
 
-            bot.execute(botUtils.plainMessage("Successfully assigned label '" +
-                            request.get(Key.LABEL_NAME.name()) + "'",
+            bot.execute(botUtils.plainMessage("Assigned label '" +
+                            request.get(Key.LABEL_NAME.name()) + "' to this data",
                     botUtils.retrieveChat(request.update).getId()
             ));
         } catch (Exception e) {
