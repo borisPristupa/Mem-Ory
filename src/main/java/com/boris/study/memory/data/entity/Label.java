@@ -75,6 +75,10 @@ public class Label {
         return parents;
     }
 
+    public void addParent(Label label) {
+        getParents().add(label);
+    }
+
     public Set<Label> getAllParentsRecursively() {
         if (null == parents)
             parents = new HashSet<>();

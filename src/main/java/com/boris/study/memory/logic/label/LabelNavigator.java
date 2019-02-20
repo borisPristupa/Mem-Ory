@@ -87,12 +87,21 @@ public class LabelNavigator extends BotScenario {
             if ("L".equals(key)) {
                 Label callbackLabel = labelUtils.obtain(value, client.getId());
                 if ("remove".equals(getConfigState(clickConfig))) {
-                    if (getCurrentLabel().getSons().contains(callbackLabel)) {
+                    if (getCurrentLabel().getSons().contains(callbackLabel) && callbackLabel.getParents().size() > 1) {
                         getCurrentLabel().getSons().remove(callbackLabel);
                         callbackLabel.getParents().remove(getCurrentLabel());
-                    } else {
+                    } else if (getCurrentLabel().getParents().size() > 1) {
                         getCurrentLabel().getParents().remove(callbackLabel);
                         callbackLabel.getSons().remove(getCurrentLabel());
+                    } else {
+                        try {
+                            bot.execute(botUtils.plainMessage(
+                                    "Ошибочка: у этой метки осталась всего одна надметка. Чтобы метку можно было " +
+                                            "найти, у неё должна быть хотя бы одна надметка (это не касается 'all data')",
+                                    botUtils.retrieveChat(request.update).getId()));
+                        } catch (TelegramApiException e) {
+                            logger.error("Couldn't inform about single superlabel");
+                        }
                     }
 
                     labelRepository.save(getCurrentLabel());
@@ -236,44 +245,113 @@ public class LabelNavigator extends BotScenario {
                     }
                 } else {
                     if (dataUtils.isValidLabelName(text)) {
+                        Label current = getCurrentLabel();
                         String name = text.toLowerCase();
-                        Label label = labelRepository.findByNameAndClientId(name, client.getId()).orElseGet(() -> {
-                            try {
-                                bot.execute(botUtils.plainMessage(
-                                        "This label doesn't exist now, but I will create it",
-                                        botUtils.retrieveChat(request.update).getId()));
-                            } catch (TelegramApiException e) {
-                                logger.error("Couldn't inform about creating new label in request " + request, e);
-                            }
-
-                            return new Label(name, client);
-                        });
-
-                        Label current = labelRepository
-                                .findByNameAndClientId(
-                                        getCurrentLabelName(),
-                                        client.getId())
-                                .orElseThrow(() -> new IllegalStateException("No current label '" +
-                                        getCurrentLabelName() +
-                                        "' found for request " + request));
-
-                        current.addSon(label);
-                        labelRepository.save(label);
-                        labelRepository.save(current);
-                        try {
-                            bot.execute(botUtils.plainMessage(
-                                    "Successfully added a sublabel '" + name + "' for '" + current.getName() + "'",
-                                    botUtils.retrieveChat(request.update).getId()));
-                        } catch (TelegramApiException e) {
-                            logger.error("Couldn't inform about a sublabel in request " + request, e);
+                        Label label;
+                        switch (getConfigState(txtConfig)) {
+                            case "goto":
+                                label = getLabelOrThrow(name, request);
+                                if (null != label) {
+                                    setCurrentLabel(name);
+                                    updateNavigator(label, request);
+                                }
+                                break;
+                            case "rename":
+                                if (labelRepository.findByNameAndClientId(name, client.getId()).isPresent()) {
+                                    try {
+                                        bot.execute(botUtils.plainMessage(
+                                                "Ошибочка: такая метка уже есть",
+                                                botUtils.retrieveChat(request.update).getId()));
+                                    } catch (TelegramApiException e) {
+                                        logger.error("Couldn't warn about already existing label, " + request, e);
+                                    }
+                                } else {
+                                    current.setName(name);
+                                    labelRepository.save(current);
+                                    setCurrentLabel(name);
+                                    updateNavigator(current, request);
+                                }
+                                break;
+                            case "sub":
+                                label = getLabelOrCreate(name, request);
+                                if (current.getAllParentsRecursively().contains(label) ||
+                                        current.getName().equals(name)) {
+                                    try {
+                                        bot.execute(botUtils.plainMessage(
+                                                "Ошибочка: метка '" + label.getName() + "' является надметкой " +
+                                                        "текущей метки или даже это она сама и есть. " +
+                                                        "Чтобы не произошёл коллапс Вселенной, я не " +
+                                                        "добавлю её в список подметок",
+                                                botUtils.retrieveChat(request.update).getId()));
+                                    } catch (TelegramApiException e) {
+                                        logger.error("Couldn't warn about recursion-causing label in request " + request, e);
+                                    }
+                                } else {
+                                    current.addSon(label);
+                                    label.addParent(current);
+                                    labelRepository.save(label);
+                                    labelRepository.save(current);
+                                    try {
+                                        bot.execute(botUtils.plainMessage(
+                                                "Метка '" + name + "' успешно добавлена в список подметок " +
+                                                        "'" + current.getName() + "'",
+                                                botUtils.retrieveChat(request.update).getId()));
+                                    } catch (TelegramApiException e) {
+                                        logger.error("Couldn't inform about a sublabel in request " + request, e);
+                                    }
+                                    updateNavigator(current, request);
+                                }
+                                break;
+                            case "super":
+                                if (current.getName().equals("all data")) {
+                                    try {
+                                        bot.execute(botUtils.plainMessage(
+                                                "Ошибочка: 'all data' не может иметь надметок",
+                                                botUtils.retrieveChat(request.update).getId()));
+                                    } catch (TelegramApiException e) {
+                                        logger.error("Couldn't warn about trying to lower 'all data', " + request, e);
+                                    }
+                                    break;
+                                }
+                                label = getLabelOrCreate(name, request);
+                                if (current.getAllSonsRecursively().contains(label)) {
+                                    try {
+                                        bot.execute(botUtils.plainMessage(
+                                                "Ошибочка: метка '" + label.getName() + "' является подметкой " +
+                                                        "текущей метки, или даже это она сама и есть. " +
+                                                        "Чтобы не произошёл коллапс Вселенной, я не " +
+                                                        "добавлю её в список надметок",
+                                                botUtils.retrieveChat(request.update).getId()));
+                                    } catch (TelegramApiException e) {
+                                        logger.error("Couldn't warn about recursion-causing label in request " + request, e);
+                                    }
+                                } else {
+                                    current.addParent(label);
+                                    label.addSon(current);
+                                    labelRepository.save(label);
+                                    labelRepository.save(current);
+                                    try {
+                                        bot.execute(botUtils.plainMessage(
+                                                "Метка '" + name + "' успешно добавлена в список надметок " +
+                                                        "'" + current.getName() + "'",
+                                                botUtils.retrieveChat(request.update).getId()));
+                                    } catch (TelegramApiException e) {
+                                        logger.error("Couldn't inform about a superlabel in request " + request, e);
+                                    }
+                                    updateNavigator(current, request);
+                                }
+                                break;
+                            default:
+                                throw new IllegalStateException("Unknown txtConfig state: " + getConfigState(txtConfig));
                         }
-                        updateNavigator(current, request);
+
+
                     } else {
                         try {
                             bot.execute(botUtils.plainMessage(
-                                    "Didn't save new label: it's name's length must be less than " +
+                                    "Прошу простить за грубость, но длина имени метки должна быть меньше " +
                                             DataUtils.LABEL_NAME_LENGTH +
-                                            " symbols and it can't contain line breaks",
+                                            " символов и не должна содержать переносов строки",
                                     botUtils.retrieveChat(request.update).getId()
                             ));
                         } catch (TelegramApiException e) {
@@ -380,6 +458,32 @@ public class LabelNavigator extends BotScenario {
                     button.setText(emoji + button.getText());
                 }));
         return sublabelsMarkup;
+    }
+
+    private Label getLabelOrCreate(String name, Request request) {
+        return labelRepository.findByNameAndClientId(name, getClient().getId()).orElseGet(() -> {
+            try {
+                bot.execute(botUtils.plainMessage(
+                        "This label doesn't exist now, but I will create it",
+                        botUtils.retrieveChat(request.update).getId()));
+            } catch (TelegramApiException e) {
+                logger.error("Couldn't inform about creating new label in request " + request, e);
+            }
+            return new Label(name, getClient());
+        });
+    }
+
+    private Label getLabelOrThrow(String name, Request request) {
+        return labelRepository.findByNameAndClientId(name, getClient().getId()).orElseGet(() -> {
+            try {
+                bot.execute(botUtils.plainMessage(
+                        "This label doesn't exist, sorry",
+                        botUtils.retrieveChat(request.update).getId()));
+            } catch (TelegramApiException e) {
+                logger.error("Couldn't inform about absence of a label in request " + request, e);
+            }
+            return null;
+        });
     }
 
     private Set<String> getCheckedLabelsNames() {
