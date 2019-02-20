@@ -10,21 +10,21 @@ The problem here is that these two options are equally good. The ambiguity of ch
 
 ## Guide for ...
 * ### Users
-    This bot is being developed too quickly to give you any guides right now. 
+    [This step-by-step guide](https://github.com/borisPristupa/Mem-Ory/wiki/Step-by-step-guide) with screenshots will take you through the power of this bot.
 
 * ### My university's practice lead
     Let's be honest: this is a wonderful project. In case you have got any commentaries, contact me [here](https://github.com/borisPristupa/Mem-Ory#contact-me)
 
 * ### Developers
     #### Architecture
-    The main concept of this app is based on Scenarios - classes, extending [``BotScenario``](https://github.com/borisPristupa/Mem-Ory/blob/master/src/main/java/com/boris/study/memory/logic/sructure/BotScenario.java) abstract class. Each such class contains a method ``process``, receiving ``Update``, performing some business logic and returning ``Boolean`` - an answer to the question "Did this scenario finish?". <br/>You might be interested why do we need returning ``Boolean`` to determine whether the scenario has finished or not, why don't we just assume it has finished after ``process`` method returned? That is due to the design of the TelegramBots library: each bot has just one method that receives updates asynchronously. But what if you need to have a conversation with your user whithin a single scenario? It was decided to do in this way: when scenario's code finishes, but it still has some logic to finish, it returns false, which indicates that the one who started this scenario should pass the information about new updates right to this scenario untill it returns true.
+    The main concept of this app is based on Scenarios - classes, extending [``BotScenario``](https://github.com/borisPristupa/Mem-Ory/blob/master/src/main/java/com/boris/study/memory/logic/sructure/BotScenario.java) abstract class. Each such class contains a method ``process``, receiving ``Update`` and a ``Map<String, String>``, performing some business logic and returning ``Boolean`` - an answer to the question "Did this scenario finish?". <br/>You might be interested why do we need returning ``Boolean`` to determine whether the scenario has finished or not, why don't we just assume it has finished after ``process`` method returned? That is due to the design of the TelegramBots library: each bot has just one method that receives updates asynchronously. But what if you need to have a conversation with your user whithin a single scenario? It was decided to do in this way: when scenario's code finishes, but it still has some logic to finish, it returns false, which indicates that the one who started this scenario should pass the information about new updates right to this scenario untill it returns true.
     #### Used technologies
     The bot is written on Java with usage of [TelegramBots](https://github.com/rubenlagus/TelegramBots "Java library to create bots using Telegram Bots API") library of version 4.1 and [Spring Boot](https://spring.io/projects/spring-boot) framework of version 2.0.8.
     
     [PostgreSQL 10.6](https://www.postgresql.org/docs/10/index.html) is used for storing data.<br />[Spring Data JPA](http://spring.io/projects/spring-data-jpa) is used for accessing data.
 
     #### Bot
-    For security reasons, some properties (i.e. token) of this bot are not uploaded. In order to check your code, create your own bot [here](http://t.me/BotFather "BotFather"). You will also need to add your bot to a conversation of two or more people. The bot will send its data there. The id of this chat should be placed into the property file as ``app.magic-chat``.
+    For security reasons, some properties (i.e. token) of this bot are not uploaded. In order to check your code, create your own bot [here](http://t.me/BotFather "BotFather"). You will also need to add your bot to a conversation of two or more people. The bot will send its data there. The id of that chat should be placed into the property file as ``app.magic-chat``.
     #### Property file
     All the properties are held in Spring's property file ``application.yaml``. This is what it should look like:
     ```

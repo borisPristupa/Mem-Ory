@@ -145,7 +145,10 @@ public class LabelNavigator extends BotScenario {
                 String text = request.update.getMessage().getText();
                 if ("Send data by selected label(s)".equals(text)) {
                     Set<String> selectedLabels = getCheckedLabelsNames();
-                    Set<Data> selectedData = dataRepository.findAllByLabelNamesAndClientId(selectedLabels, client.getId());
+                    Set<Data> selectedData;
+                    selectedData = selectedLabels.isEmpty()
+                            ? new HashSet<>()
+                            : dataRepository.findAllByLabelNamesAndClientId(selectedLabels, client.getId());
                     String dataList = dataUtils.formDataList(selectedData);
                     try {
                         bot.execute(botUtils.plainMessage(dataList, botUtils.retrieveChat(request.update).getId()));
@@ -252,6 +255,14 @@ public class LabelNavigator extends BotScenario {
                             case "goto":
                                 label = getLabelOrThrow(name, request);
                                 if (null != label) {
+                                    Set<String> checked = getCheckedLabelsNames();
+                                    label.getAllParentsRecursively().forEach(label1 -> {
+                                        if (checked.contains(label1.getName())) {
+                                            JSONObject state = getState();
+                                            state.remove(label1.getName());
+                                            setState(state);
+                                        }
+                                    });
                                     setCurrentLabel(name);
                                     updateNavigator(label, request);
                                 }
